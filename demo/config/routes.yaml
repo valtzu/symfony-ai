@@ -49,3 +49,10 @@ stream:
 stream_assistant_reply:
     path: '/stream/assistant-reply'
     controller: 'App\Stream\TwigComponent::streamContent'
+
+
+audio_stream:
+    path: '/audio-stream'
+    controller: 'Symfony\Bundle\FrameworkBundle\Controller\TemplateController'
+    defaults:
+        template: 'audio_stream.html.twig'

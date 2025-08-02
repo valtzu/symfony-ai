@@ -39,4 +39,7 @@ return [
     'typed.js' => [
         'version' => '2.1.0',
     ],
+    '@google/genai' => [
+        'version' => '1.12.0',
+    ],
 ];

@@ -1,0 +1,26 @@
+<div data-controller="audio-stream" data-audio-stream-api-key-value="{{ this.apiKey }}" class="audio-visualizer">
+    <h1>Talk into your microphone!</h1>
+
+    <div class="hstack mx-auto gap-3">
+        <div class="volume-bar-container">
+            <div class="volume-bar">
+                {%- for i in 1..13 -%}
+                    <div data-audio-stream-target="inputBucket"></div>
+                {%- endfor -%}
+            </div>
+        </div>
+        <div class="volume-bar-container">
+            <div class="volume-bar">
+                {%- for i in 1..13 -%}
+                    <div data-audio-stream-target="outputBucket"></div>
+                {%- endfor -%}
+            </div>
+        </div>
+    </div>
+
+    <button data-action="audio-stream#start" data-audio-stream-target="startButton">Start</button>
+    <button data-action="audio-stream#stop" data-audio-stream-target="stopButton" style="display: none;">Stop</button>
+
+
+    <div data-audio-stream-target="status" class="status"></div>
+</div>
