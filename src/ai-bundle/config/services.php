@@ -59,6 +59,7 @@ use Symfony\AI\Platform\Bridge\VertexAi\Contract\GeminiContract as VertexAiGemin
 use Symfony\AI\Platform\Bridge\VertexAi\ModelCatalog as VertexAiModelCatalog;
 use Symfony\AI\Platform\Bridge\Voyage\ModelCatalog as VoyageModelCatalog;
 use Symfony\AI\Platform\Contract;
+use Symfony\AI\Platform\Contract\JsonSchema\Describer\CacheDescriber;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\Describer;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\MethodDescriber;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\PropertyInfoDescriber;
@@ -191,6 +192,11 @@ return static function (ContainerConfigurator $container): void {
         ->set('ai.platform.json_schema.describer', Describer::class)
             ->args([
                 tagged_iterator('ai.platform.json_schema.describer'),
+            ])
+        ->set('ai.platform.json_schema.describer.cache', CacheDescriber::class)
+            ->args([
+                abstract_arg('schema definitions'),
+                service('.inner'),
             ])
         ->set('ai.platform.json_schema_factory', SchemaFactory::class)
             ->args([

@@ -79,6 +79,7 @@ use Symfony\AI\Platform\Bridge\TransformersPhp\PlatformFactory as TransformersPh
 use Symfony\AI\Platform\Bridge\VertexAi\PlatformFactory as VertexAiPlatformFactory;
 use Symfony\AI\Platform\Bridge\Voyage\PlatformFactory as VoyagePlatformFactory;
 use Symfony\AI\Platform\Capability;
+use Symfony\AI\Platform\Contract\JsonSchema\DependencyInjection\CacheDescriberPass;
 use Symfony\AI\Platform\Exception\RuntimeException;
 use Symfony\AI\Platform\Message\Content\File;
 use Symfony\AI\Platform\ModelClientInterface;
@@ -130,6 +131,7 @@ use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\DependencyInjection\ChildDefinition;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
@@ -153,6 +155,7 @@ final class AiBundle extends AbstractBundle
 
         $container->addCompilerPass(new DebugCompilerPass());
         $container->addCompilerPass(new ProcessorCompilerPass());
+        $container->addCompilerPass(new CacheDescriberPass(), PassConfig::TYPE_OPTIMIZE);
     }
 
     public function configure(DefinitionConfigurator $definition): void
