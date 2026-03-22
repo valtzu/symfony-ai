@@ -35,12 +35,10 @@ final class ToolNormalizer extends ModelContractNormalizer
      */
     public function normalize(mixed $data, ?string $format = null, array $context = []): array
     {
-        $parameters = $data->getParameters() ? $this->normalizeSchema($data->getParameters()) : null;
-
         return [
             'name' => $data->getName(),
             'description' => $data->getDescription(),
-            'parameters' => $parameters,
+            'parameters' => $data->getParameters() ?: null,
         ];
     }
 
@@ -52,45 +50,5 @@ final class ToolNormalizer extends ModelContractNormalizer
     protected function supportsModel(BaseModel $model): bool
     {
         return $model instanceof Model;
-    }
-
-    /**
-     * Normalizes a JSON Schema for VertexAI compatibility.
-     *
-     * - Removes 'additionalProperties' (not supported by VertexAI)
-     * - Converts array-style nullable types ['string', 'null'] to ['type' => 'string', 'nullable' => true]
-     *
-     * @template T of array
-     *
-     * @phpstan-param T $data
-     *
-     * @phpstan-return T
-     */
-    private function normalizeSchema(array $data): array
-    {
-        unset($data['additionalProperties']);
-
-        // Convert array-style nullable types to VertexAI format
-        if (isset($data['type']) && \is_array($data['type'])) {
-            $nullIndex = array_search('null', $data['type'], true);
-            if (false !== $nullIndex) {
-                $types = $data['type'];
-                unset($types[$nullIndex]);
-                $types = array_values($types);
-
-                if (1 === \count($types)) {
-                    $data['type'] = $types[0];
-                    $data['nullable'] = true;
-                }
-            }
-        }
-
-        foreach ($data as &$value) {
-            if (\is_array($value)) {
-                $value = $this->normalizeSchema($value);
-            }
-        }
-
-        return $data;
     }
 }

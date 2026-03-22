@@ -123,9 +123,11 @@ final class ToolNormalizerTest extends TestCase
                         'nestedObject' => [
                             'type' => 'object',
                             'description' => 'bar',
+                            'additionalProperties' => false,
                         ],
                     ],
                     'required' => ['text', 'number'],
+                    'additionalProperties' => false,
                 ],
             ],
         ];
@@ -154,11 +156,11 @@ final class ToolNormalizerTest extends TestCase
                     'type' => 'object',
                     'properties' => [
                         'name' => [
-                            'type' => 'string',
-                            'nullable' => true,
+                            'type' => ['string', 'null'],
                             'description' => 'A nullable name',
                         ],
                     ],
+                    'additionalProperties' => false,
                 ],
             ],
         ];
@@ -196,13 +198,14 @@ final class ToolNormalizerTest extends TestCase
                             'type' => 'object',
                             'properties' => [
                                 'age' => [
-                                    'type' => 'integer',
-                                    'nullable' => true,
+                                    'type' => ['integer', 'null'],
                                     'description' => 'User age',
                                 ],
                             ],
+                            'additionalProperties' => false,
                         ],
                     ],
+                    'additionalProperties' => false,
                 ],
             ],
         ];

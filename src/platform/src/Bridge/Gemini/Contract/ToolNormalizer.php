@@ -38,7 +38,7 @@ final class ToolNormalizer extends ModelContractNormalizer
         return [
             'description' => $data->getDescription(),
             'name' => $data->getName(),
-            'parameters' => $data->getParameters() ? $this->normalizeSchema($data->getParameters()) : null,
+            'parameters' => $data->getParameters() ?: null,
         ];
     }
 
@@ -50,45 +50,5 @@ final class ToolNormalizer extends ModelContractNormalizer
     protected function supportsModel(Model $model): bool
     {
         return $model instanceof Gemini;
-    }
-
-    /**
-     * Normalizes a JSON Schema for Gemini compatibility.
-     *
-     * - Removes 'additionalProperties' (not supported by Gemini)
-     * - Converts array-style nullable types ['string', 'null'] to ['type' => 'string', 'nullable' => true]
-     *
-     * @template T of array
-     *
-     * @phpstan-param T $data
-     *
-     * @phpstan-return T
-     */
-    private function normalizeSchema(array $data): array
-    {
-        unset($data['additionalProperties']);
-
-        // Convert array-style nullable types to Gemini format
-        if (isset($data['type']) && \is_array($data['type'])) {
-            $nullIndex = array_search('null', $data['type'], true);
-            if (false !== $nullIndex) {
-                $types = $data['type'];
-                unset($types[$nullIndex]);
-                $types = array_values($types);
-
-                if (1 === \count($types)) {
-                    $data['type'] = $types[0];
-                    $data['nullable'] = true;
-                }
-            }
-        }
-
-        foreach ($data as &$value) {
-            if (\is_array($value)) {
-                $value = $this->normalizeSchema($value);
-            }
-        }
-
-        return $data;
     }
 }
