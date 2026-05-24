@@ -34,6 +34,7 @@ use Symfony\AI\Agent\Toolbox\ToolFactory\ChainFactory;
 use Symfony\AI\Agent\Toolbox\ToolFactory\MemoryToolFactory;
 use Symfony\AI\Agent\Toolbox\ToolFactory\ReflectionToolFactory;
 use Symfony\AI\Agent\Toolbox\ToolResult;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Result\ToolCall;
 use Symfony\AI\Platform\Tool\ExecutionReference;
 use Symfony\AI\Platform\Tool\Tool;
@@ -62,42 +63,30 @@ final class ToolboxTest extends TestCase
             new ExecutionReference(ToolRequiredParams::class, 'bar'),
             'tool_required_params',
             'A tool with required parameters',
-            [
-                'type' => 'object',
-                'properties' => [
-                    'text' => [
-                        'type' => 'string',
-                        'description' => 'The text given to the tool',
-                    ],
-                    'number' => [
-                        'type' => 'integer',
-                        'description' => 'A number given to the tool',
-                    ],
+            new Schema(
+                type: 'object',
+                properties: [
+                    'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                    'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                 ],
-                'required' => ['text', 'number'],
-                'additionalProperties' => false,
-            ],
+                required: ['text', 'number'],
+                additionalProperties: false,
+            ),
         );
 
         $toolOptionalParam = new Tool(
             new ExecutionReference(ToolOptionalParam::class, 'bar'),
             'tool_optional_param',
             'A tool with one optional parameter',
-            [
-                'type' => 'object',
-                'properties' => [
-                    'text' => [
-                        'type' => 'string',
-                        'description' => 'The text given to the tool',
-                    ],
-                    'number' => [
-                        'type' => 'integer',
-                        'description' => 'A number given to the tool',
-                    ],
+            new Schema(
+                type: 'object',
+                properties: [
+                    'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                    'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                 ],
-                'required' => ['text'],
-                'additionalProperties' => false,
-            ],
+                required: ['text'],
+                additionalProperties: false,
+            ),
         );
 
         $toolNoParams = new Tool(
@@ -122,18 +111,14 @@ final class ToolboxTest extends TestCase
             new ExecutionReference(ToolDate::class, '__invoke'),
             'tool_date',
             'A tool with date parameter',
-            [
-                'type' => 'object',
-                'properties' => [
-                    'date' => [
-                        'type' => 'string',
-                        'format' => 'date-time',
-                        'description' => 'The date',
-                    ],
+            new Schema(
+                type: 'object',
+                properties: [
+                    'date' => new Schema(type: 'string', format: 'date-time', description: 'The date'),
                 ],
-                'required' => ['date'],
-                'additionalProperties' => false,
-            ],
+                required: ['date'],
+                additionalProperties: false,
+            ),
         );
 
         $expected = [
@@ -225,21 +210,15 @@ final class ToolboxTest extends TestCase
                 new ExecutionReference(ToolNoAttribute1::class, '__invoke'),
                 'happy_birthday',
                 'Generates birthday message',
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'name' => [
-                            'type' => 'string',
-                            'description' => 'the name of the person',
-                        ],
-                        'years' => [
-                            'type' => 'integer',
-                            'description' => 'the age of the person',
-                        ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'name' => new Schema(type: 'string', description: 'the name of the person'),
+                        'years' => new Schema(type: 'integer', description: 'the age of the person'),
                     ],
-                    'required' => ['name', 'years'],
-                    'additionalProperties' => false,
-                ],
+                    required: ['name', 'years'],
+                    additionalProperties: false,
+                ),
             ),
         ];
 
@@ -315,21 +294,15 @@ final class ToolboxTest extends TestCase
                 new ExecutionReference(ToolOptionalParam::class, 'bar'),
                 'optional_param',
                 'Tool with optional param',
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'text' => [
-                            'type' => 'string',
-                            'description' => 'The text given to the tool',
-                        ],
-                        'number' => [
-                            'type' => 'integer',
-                            'description' => 'A number given to the tool',
-                        ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                        'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                     ],
-                    'required' => ['text'],
-                    'additionalProperties' => false,
-                ],
+                    required: ['text'],
+                    additionalProperties: false,
+                ),
             ),
         ];
 

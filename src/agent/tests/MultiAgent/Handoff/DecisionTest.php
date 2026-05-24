@@ -56,7 +56,7 @@ class DecisionTest extends TestCase
     {
         $schema = (new Factory())->buildProperties(Decision::class);
 
-        $this->assertSame(['agentName', 'reasoning'], array_keys($schema['properties']));
-        $this->assertSame(['agentName', 'reasoning'], $schema['required']);
+        $this->assertSame(['agentName', 'reasoning'], array_keys($schema->properties));
+        $this->assertSame(['agentName', 'reasoning'], $schema->required);
     }
 }

@@ -1,3 +1,33 @@
+UPGRADE FROM 0.9 to 0.10
+========================
+
+Platform
+--------
+
+ * `Tool::getParameters()` now returns `?Schema` instead of `?array`. Update any code that calls this
+   method and expects a plain array:
+
+   ```diff
+   -$parameters = $tool->getParameters(); // array|null
+   +$parameters = $tool->getParameters(); // Schema|null
+   ```
+
+ * `PropertyDescriberInterface::describeProperty()` now accepts a `Schema` object instead of a
+   `?array` reference for the second parameter. Implement the new signature in custom describers:
+
+   ```diff
+   -public function describeProperty(PropertySubject $subject, ?array &$schema): void
+   +public function describeProperty(PropertySubject $subject, Schema $schema): void
+   ```
+
+ * `ObjectDescriberInterface::describeObject()` now accepts a `Schema` object instead of a `?array`
+   reference for the second parameter. Implement the new signature in custom describers:
+
+   ```diff
+   -public function describeObject(ObjectSubject $subject, ?array &$schema): iterable
+   +public function describeObject(ObjectSubject $subject, Schema $schema): iterable
+   ```
+
 UPGRADE FROM 0.8 to 0.9
 =======================
 

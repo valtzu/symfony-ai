@@ -18,12 +18,9 @@ use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolWrong;
 use Symfony\AI\Agent\Toolbox\Attribute\AsTool;
 use Symfony\AI\Agent\Toolbox\Exception\ToolException;
 use Symfony\AI\Agent\Toolbox\ToolFactory\ReflectionToolFactory;
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Tool\Tool;
 
-/**
- * @phpstan-import-type JsonSchema from Factory
- */
 final class ReflectionFactoryTest extends TestCase
 {
     private ReflectionToolFactory $factory;
@@ -60,21 +57,15 @@ final class ReflectionFactoryTest extends TestCase
             name: 'tool_required_params',
             description: 'A tool with required parameters',
             method: 'bar',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'text' => [
-                        'type' => 'string',
-                        'description' => 'The text given to the tool',
-                    ],
-                    'number' => [
-                        'type' => 'integer',
-                        'description' => 'A number given to the tool',
-                    ],
+            parameters: new Schema(
+                type: 'object',
+                properties: [
+                    'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                    'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                 ],
-                'required' => ['text', 'number'],
-                'additionalProperties' => false,
-            ],
+                required: ['text', 'number'],
+                additionalProperties: false,
+            ),
         );
     }
 
@@ -92,17 +83,14 @@ final class ReflectionFactoryTest extends TestCase
             name: 'tool_hello_world',
             description: 'Function to say hello',
             method: 'hello',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'world' => [
-                        'type' => 'string',
-                        'description' => 'The world to say hello to',
-                    ],
+            parameters: new Schema(
+                type: 'object',
+                properties: [
+                    'world' => new Schema(type: 'string', description: 'The world to say hello to'),
                 ],
-                'required' => ['world'],
-                'additionalProperties' => false,
-            ],
+                required: ['world'],
+                additionalProperties: false,
+            ),
         );
 
         $this->assertToolConfiguration(
@@ -111,33 +99,24 @@ final class ReflectionFactoryTest extends TestCase
             name: 'tool_required_params',
             description: 'Function to say a number',
             method: 'bar',
-            parameters: [
-                'type' => 'object',
-                'properties' => [
-                    'text' => [
-                        'type' => 'string',
-                        'description' => 'The text given to the tool',
-                    ],
-                    'number' => [
-                        'type' => 'integer',
-                        'description' => 'A number given to the tool',
-                    ],
+            parameters: new Schema(
+                type: 'object',
+                properties: [
+                    'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                    'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                 ],
-                'required' => ['text', 'number'],
-                'additionalProperties' => false,
-            ],
+                required: ['text', 'number'],
+                additionalProperties: false,
+            ),
         );
     }
 
-    /**
-     * @param JsonSchema $parameters
-     */
-    private function assertToolConfiguration(Tool $metadata, string $className, string $name, string $description, string $method, array $parameters): void
+    private function assertToolConfiguration(Tool $metadata, string $className, string $name, string $description, string $method, Schema $parameters): void
     {
         $this->assertSame($className, $metadata->getReference()->getClass());
         $this->assertSame($method, $metadata->getReference()->getMethod());
         $this->assertSame($name, $metadata->getName());
         $this->assertSame($description, $metadata->getDescription());
-        $this->assertSame($parameters, $metadata->getParameters());
+        $this->assertEquals($parameters, $metadata->getParameters());
     }
 }

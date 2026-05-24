@@ -11,41 +11,12 @@
 
 namespace Symfony\AI\Platform\Contract\JsonSchema;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\Describer;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\ObjectDescriberInterface;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 
 /**
- * @phpstan-type JsonSchema array{
- *     type: 'object',
- *     properties: array<string, array{
- *         type: string,
- *         description: string,
- *         enum?: list<string>,
- *         const?: string|int|list<string>,
- *         pattern?: string,
- *         minLength?: int,
- *         maxLength?: int,
- *         minimum?: int|float,
- *         maximum?: int|float,
- *         multipleOf?: int|float,
- *         exclusiveMinimum?: int|float,
- *         exclusiveMaximum?: int|float,
- *         minItems?: int,
- *         maxItems?: int,
- *         uniqueItems?: bool,
- *         minContains?: int,
- *         maxContains?: int,
- *         required?: bool,
- *         minProperties?: int,
- *         maxProperties?: int,
- *         dependentRequired?: bool,
- *         anyOf?: list<mixed>,
- *     }>,
- *     required: list<string>,
- *     additionalProperties: false,
- * }
- *
  * @author Christopher Hertel <mail@christopher-hertel.de>
  * @author Oskar Stark <oskarstark@googlemail.com>
  */
@@ -56,24 +27,35 @@ final class Factory
     ) {
     }
 
-    /**
-     * @return JsonSchema|null
-     */
-    public function buildParameters(string $className, string $methodName): ?array
+    public function buildParameters(string $className, string $methodName): ?Schema
     {
-        $schema = null;
+        $schema = new Schema();
         $this->objectDescriber->describeObject(new ObjectSubject($className.'::'.$methodName, new \ReflectionMethod($className, $methodName)), $schema);
 
-        return $schema;
+        return $this->toSchemaOrNull($schema);
     }
 
-    /**
-     * @return JsonSchema|null
-     */
-    public function buildProperties(string $className): ?array
+    public function buildProperties(string $className): ?Schema
     {
-        $schema = null;
+        $schema = new Schema();
         $this->objectDescriber->describeObject(new ObjectSubject($className, new \ReflectionClass($className)), $schema);
+
+        return $this->toSchemaOrNull($schema);
+    }
+
+    private function toSchemaOrNull(Schema $schema): ?Schema
+    {
+        if ($schema->isEmpty()) {
+            return null;
+        }
+
+        if ('object' === $schema->type) {
+            $copy = clone $schema;
+            $copy->type = null;
+            if ($copy->isEmpty()) {
+                return null;
+            }
+        }
 
         return $schema;
     }

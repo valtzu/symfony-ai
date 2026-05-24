@@ -15,18 +15,24 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolNoParams;
 use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolRequiredParams;
+use Symfony\AI\Platform\Bridge\Gemini\Contract\SchemaNormalizer;
 use Symfony\AI\Platform\Bridge\Gemini\Contract\ToolNormalizer;
 use Symfony\AI\Platform\Bridge\Gemini\Gemini;
 use Symfony\AI\Platform\Contract;
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Tool\ExecutionReference;
 use Symfony\AI\Platform\Tool\Tool;
+use Symfony\Component\Serializer\Serializer;
 
-/**
- * @phpstan-import-type JsonSchema from Factory
- */
 final class ToolNormalizerTest extends TestCase
 {
+    private Serializer $serializer;
+
+    protected function setUp(): void
+    {
+        $this->serializer = new Serializer([new SchemaNormalizer(), new ToolNormalizer()]);
+    }
+
     public function testSupportsNormalization()
     {
         $normalizer = new ToolNormalizer();
@@ -49,14 +55,13 @@ final class ToolNormalizerTest extends TestCase
     }
 
     /**
-     * @param array{name: string, description: string, parameters: JsonSchema|array{type: 'object'}} $expected
+     * @param array{name: string, description: string, parameters: array<string, mixed>|null} $expected
      */
     #[DataProvider('normalizeDataProvider')]
     public function testNormalize(Tool $tool, array $expected)
     {
-        $normalizer = new ToolNormalizer();
-
-        $normalized = $normalizer->normalize($tool);
+        $context = [Contract::CONTEXT_MODEL => new Gemini('gemini-2.0-flash')];
+        $normalized = $this->serializer->normalize($tool, null, $context);
 
         $this->assertEquals($expected, $normalized);
     }
@@ -71,26 +76,16 @@ final class ToolNormalizerTest extends TestCase
                 new ExecutionReference(ToolRequiredParams::class, 'bar'),
                 'tool_required_params',
                 'A tool with required parameters',
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'text' => [
-                            'type' => 'string',
-                            'description' => 'Text parameter',
-                        ],
-                        'number' => [
-                            'type' => 'integer',
-                            'description' => 'Number parameter',
-                        ],
-                        'nestedObject' => [
-                            'type' => 'object',
-                            'description' => 'bar',
-                            'additionalProperties' => false,
-                        ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'text' => new Schema(type: 'string', description: 'Text parameter'),
+                        'number' => new Schema(type: 'integer', description: 'Number parameter'),
+                        'nestedObject' => new Schema(type: 'object', description: 'bar', additionalProperties: false),
                     ],
-                    'required' => ['text', 'number'],
-                    'additionalProperties' => false,
-                ],
+                    required: ['text', 'number'],
+                    additionalProperties: false,
+                ),
             ),
             [
                 'description' => 'A tool with required parameters',
@@ -135,17 +130,13 @@ final class ToolNormalizerTest extends TestCase
                 new ExecutionReference(ToolRequiredParams::class, 'bar'),
                 'tool_nullable_param',
                 'A tool with nullable parameter',
-                // @phpstan-ignore argument.type (testing array-style nullable types that get normalized)
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'name' => [
-                            'type' => ['string', 'null'],
-                            'description' => 'A nullable name',
-                        ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'name' => new Schema(type: ['string', 'null'], description: 'A nullable name'),
                     ],
-                    'additionalProperties' => false,
-                ],
+                    additionalProperties: false,
+                ),
             ),
             [
                 'description' => 'A tool with nullable parameter',
@@ -168,28 +159,20 @@ final class ToolNormalizerTest extends TestCase
                 new ExecutionReference(ToolRequiredParams::class, 'bar'),
                 'tool_with_schema_meta_key',
                 'A tool whose schema carries the JSON-Schema $schema meta-key (e.g. produced by an MCP server)',
-                // @phpstan-ignore argument.type (testing JSON-Schema meta-keys that get stripped)
-                [
-                    '$schema' => 'https://json-schema.org/draft/2020-12/schema',
-                    'type' => 'object',
-                    'properties' => [
-                        'name' => [
-                            'type' => 'string',
-                            'description' => 'Name parameter',
-                        ],
-                        'nested' => [
-                            '$schema' => 'https://json-schema.org/draft/2020-12/schema',
-                            'type' => 'object',
-                            'properties' => [
-                                'inner' => [
-                                    'type' => 'string',
-                                ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'name' => new Schema(type: 'string', description: 'Name parameter'),
+                        'nested' => new Schema(
+                            type: 'object',
+                            properties: [
+                                'inner' => new Schema(type: 'string'),
                             ],
-                        ],
+                        ),
                     ],
-                    'required' => ['name'],
-                    'additionalProperties' => false,
-                ],
+                    required: ['name'],
+                    additionalProperties: false,
+                ),
             ),
             [
                 'description' => 'A tool whose schema carries the JSON-Schema $schema meta-key (e.g. produced by an MCP server)',
@@ -220,23 +203,19 @@ final class ToolNormalizerTest extends TestCase
                 new ExecutionReference(ToolRequiredParams::class, 'bar'),
                 'tool_nested_nullable',
                 'A tool with nested nullable parameter',
-                // @phpstan-ignore argument.type (testing array-style nullable types that get normalized)
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'user' => [
-                            'type' => 'object',
-                            'properties' => [
-                                'age' => [
-                                    'type' => ['integer', 'null'],
-                                    'description' => 'User age',
-                                ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'user' => new Schema(
+                            type: 'object',
+                            properties: [
+                                'age' => new Schema(type: ['integer', 'null'], description: 'User age'),
                             ],
-                            'additionalProperties' => false,
-                        ],
+                            additionalProperties: false,
+                        ),
                     ],
-                    'additionalProperties' => false,
-                ],
+                    additionalProperties: false,
+                ),
             ),
             [
                 'description' => 'A tool with nested nullable parameter',

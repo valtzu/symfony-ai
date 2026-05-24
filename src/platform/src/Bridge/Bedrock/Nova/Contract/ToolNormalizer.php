@@ -12,18 +12,19 @@
 namespace Symfony\AI\Platform\Bridge\Bedrock\Nova\Contract;
 
 use Symfony\AI\Platform\Bridge\Bedrock\Nova\Nova;
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
 use Symfony\AI\Platform\Contract\Normalizer\ModelContractNormalizer;
 use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\Tool\Tool;
+use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
 
 /**
- * @phpstan-import-type JsonSchema from Factory
- *
  * @author Christopher Hertel <mail@christopher-hertel.de>
  */
-class ToolNormalizer extends ModelContractNormalizer
+class ToolNormalizer extends ModelContractNormalizer implements NormalizerAwareInterface
 {
+    use NormalizerAwareTrait;
+
     /**
      * @param Tool $data
      *
@@ -32,7 +33,7 @@ class ToolNormalizer extends ModelContractNormalizer
      *         name: string,
      *         description: string,
      *         inputSchema: array{
-     *             json: JsonSchema|array{type: 'object'}
+     *             json: array<string, mixed>|\stdClass
      *         }
      *     }
      * }
@@ -44,7 +45,7 @@ class ToolNormalizer extends ModelContractNormalizer
                 'name' => $data->getName(),
                 'description' => $data->getDescription(),
                 'inputSchema' => [
-                    'json' => $data->getParameters() ?? new \stdClass(),
+                    'json' => $this->normalizer->normalize($data->getParameters(), $format, $context),
                 ],
             ],
         ];

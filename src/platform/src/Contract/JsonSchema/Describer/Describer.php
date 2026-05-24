@@ -11,6 +11,7 @@
 
 namespace Symfony\AI\Platform\Contract\JsonSchema\Describer;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -61,31 +62,29 @@ final class Describer implements ObjectDescriberInterface, PropertyDescriberInte
         $this->propertyDescribers = $propertyDescribers;
     }
 
-    public function describeObject(ObjectSubject $subject, ?array &$schema): iterable
+    public function describeObject(ObjectSubject $subject, Schema $schema): iterable
     {
-        $schema = $required = [];
+        $required = [];
         foreach ($this->objectDescribers as $describer) {
             foreach ($describer->describeObject($subject, $schema) as $property) {
-                $this->describeProperty($property, $schema['properties'][$property->getName()]);
+                $schema->properties ??= [];
+                $schema->properties[$property->getName()] ??= new Schema();
+                $this->describeProperty($property, $schema->properties[$property->getName()]);
                 if ($property->isRequired()) {
                     $required[$property->getName()] = true;
                 }
             }
         }
 
-        if (['type' => 'object'] === $schema) {
-            $schema = null;
-        }
-
-        if ($required) {
-            $schema['required'] = array_keys($required);
-            $schema['additionalProperties'] = false;
+        if ($required !== []) {
+            $schema->required = array_keys($required);
+            $schema->additionalProperties = false;
         }
 
         return [];
     }
 
-    public function describeProperty(PropertySubject $subject, ?array &$schema): void
+    public function describeProperty(PropertySubject $subject, Schema $schema): void
     {
         foreach ($this->propertyDescribers as $describer) {
             $describer->describeProperty($subject, $schema);

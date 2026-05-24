@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+0.10
+----
+
+ * Add `SchemaNormalizer` for converting `Schema` objects to JSON-compatible arrays via the Symfony Serializer
+ * [BC BREAK] `Tool::getParameters()` now returns `?Schema` instead of `?array`
+ * [BC BREAK] `PropertyDescriberInterface::describeProperty()` second parameter changed from `?array &$schema` to `Schema $schema`
+ * [BC BREAK] `ObjectDescriberInterface::describeObject()` second parameter changed from `?array &$schema` to `Schema $schema`
+
 0.9
 ---
 

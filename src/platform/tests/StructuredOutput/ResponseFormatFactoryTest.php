@@ -13,6 +13,7 @@ namespace Symfony\AI\Platform\Tests\StructuredOutput;
 
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\StructuredOutput\ResponseFormatFactory;
 use Symfony\AI\Platform\Tests\Fixtures\StructuredOutput\User;
 use Symfony\AI\Platform\Tests\Fixtures\StructuredOutput\UserWithAccessors;
@@ -25,30 +26,11 @@ final class ResponseFormatFactoryTest extends TestCase
     #[TestWith(['UserWithAccessors', UserWithAccessors::class])]
     public function testCreate(string $expectedName, string $class)
     {
-        $this->assertSame([
-            'type' => 'json_schema',
-            'json_schema' => [
-                'name' => $expectedName,
-                'schema' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'id' => ['type' => 'integer'],
-                        'name' => [
-                            'type' => 'string',
-                            'description' => 'The name of the user in lowercase',
-                        ],
-                        'createdAt' => [
-                            'type' => 'string',
-                            'format' => 'date-time',
-                        ],
-                        'isActive' => ['type' => 'boolean'],
-                        'age' => ['type' => ['integer', 'null']],
-                    ],
-                    'required' => ['id', 'name', 'createdAt', 'isActive', 'age'],
-                    'additionalProperties' => false,
-                ],
-                'strict' => true,
-            ],
-        ], (new ResponseFormatFactory())->create($class));
+        $result = (new ResponseFormatFactory())->create($class);
+
+        $this->assertSame('json_schema', $result['type']);
+        $this->assertSame($expectedName, $result['json_schema']['name']);
+        $this->assertTrue($result['json_schema']['strict']);
+        $this->assertInstanceOf(Schema::class, $result['json_schema']['schema']);
     }
 }

@@ -11,15 +11,12 @@
 
 namespace Symfony\AI\Platform\Contract\JsonSchema\Describer;
 
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 
-/**
- * @phpstan-import-type JsonSchema from Factory
- */
 final class SerializerDescriber implements ObjectDescriberInterface, ObjectDescriberAwareInterface
 {
     private ObjectDescriberInterface $describer;
@@ -34,7 +31,7 @@ final class SerializerDescriber implements ObjectDescriberInterface, ObjectDescr
         $this->describer = $describer;
     }
 
-    public function describeObject(ObjectSubject $subject, ?array &$schema): iterable
+    public function describeObject(ObjectSubject $subject, Schema $schema): iterable
     {
         if (!$subject->getReflector() instanceof \ReflectionClass) {
             return [];
@@ -48,8 +45,8 @@ final class SerializerDescriber implements ObjectDescriberInterface, ObjectDescr
 
         // Handle DateTimeNormalizer logic
         if (\in_array($class, ['DateTime', 'DateTimeImmutable', 'DateTimeInterface'], true)) {
-            $schema['type'] = 'string';
-            $schema['format'] = 'date-time';
+            $schema->type = 'string';
+            $schema->format = 'date-time';
 
             return [];
         }
@@ -59,10 +56,14 @@ final class SerializerDescriber implements ObjectDescriberInterface, ObjectDescr
         $discriminatorMapping = $classMetadata->getClassDiscriminatorMapping();
         if ($discriminatorMapping) {
             $typeProperty = $discriminatorMapping->getTypeProperty();
+            $schema->anyOf ??= [];
             foreach ($discriminatorMapping->getTypesMapping() as $discriminatorValue => $discriminatorClass) {
-                $subSchema = &$schema['anyOf'][];
+                $subSchema = new Schema();
+                $schema->anyOf[] = $subSchema;
                 $this->describer->describeObject(new ObjectSubject($discriminatorClass, new \ReflectionClass($discriminatorClass)), $subSchema);
-                $subSchema['properties'][$typeProperty]['enum'] = [$discriminatorValue];
+                $subSchema->properties ??= [];
+                $subSchema->properties[$typeProperty] ??= new Schema();
+                $subSchema->properties[$typeProperty]->enum = [$discriminatorValue];
             }
         }
 

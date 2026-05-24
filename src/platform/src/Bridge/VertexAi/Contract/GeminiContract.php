@@ -28,6 +28,7 @@ final class GeminiContract extends Contract
             new AssistantMessageNormalizer(),
             new MessageBagNormalizer(),
             new ToolNormalizer(),
+            new SchemaNormalizer(),
             new ToolCallMessageNormalizer(),
             new UserMessageNormalizer(),
             ...$normalizers,

@@ -11,6 +11,7 @@
 
 namespace Symfony\AI\Platform\Contract\JsonSchema\Describer;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
@@ -48,9 +49,9 @@ final class PropertyInfoDescriber implements ObjectDescriberInterface, PropertyD
         $this->propertyDescriptionExtractor = $propertyDescriptionExtractor ?? new PropertyInfoExtractor([], [], [new PhpDocExtractor()], [], [new ReflectionExtractor()]);
     }
 
-    public function describeObject(ObjectSubject $subject, ?array &$schema): iterable
+    public function describeObject(ObjectSubject $subject, Schema $schema): iterable
     {
-        if (!\in_array('object', (array) ($schema['type'] ?? 'object'))) {
+        if (!\in_array('object', (array) ($schema->type ?? 'object'))) {
             return [];
         }
 
@@ -92,7 +93,7 @@ final class PropertyInfoDescriber implements ObjectDescriberInterface, PropertyD
         }
     }
 
-    public function describeProperty(PropertySubject $subject, ?array &$schema): void
+    public function describeProperty(PropertySubject $subject, Schema $schema): void
     {
         $reflector = $subject->getReflector();
         if ($reflector instanceof \ReflectionParameter) {
@@ -100,7 +101,7 @@ final class PropertyInfoDescriber implements ObjectDescriberInterface, PropertyD
         }
 
         if ($description = $this->propertyDescriptionExtractor->getShortDescription($reflector->class, $subject->getName())) {
-            $schema['description'] = $description;
+            $schema->description = $description;
         }
     }
 }

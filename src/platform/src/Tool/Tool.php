@@ -11,23 +11,18 @@
 
 namespace Symfony\AI\Platform\Tool;
 
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 
 /**
- * @phpstan-import-type JsonSchema from Factory
- *
  * @author Christopher Hertel <mail@christopher-hertel.de>
  */
 final class Tool
 {
-    /**
-     * @param JsonSchema|null $parameters
-     */
     public function __construct(
         private readonly ExecutionReference $reference,
         private readonly string $name,
         private readonly string $description,
-        private readonly ?array $parameters = null,
+        private readonly ?Schema $parameters = null,
     ) {
     }
 
@@ -46,10 +41,7 @@ final class Tool
         return $this->description;
     }
 
-    /**
-     * @return JsonSchema|null
-     */
-    public function getParameters(): ?array
+    public function getParameters(): ?Schema
     {
         return $this->parameters;
     }

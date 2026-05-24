@@ -12,18 +12,19 @@
 namespace Symfony\AI\Platform\Bridge\OpenResponses\Contract;
 
 use Symfony\AI\Platform\Bridge\OpenResponses\ResponsesModel;
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
 use Symfony\AI\Platform\Contract\Normalizer\ModelContractNormalizer;
 use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\Tool\Tool;
+use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
 
 /**
- * @phpstan-import-type JsonSchema from Factory
- *
  * @author Pauline Vos <pauline.vos@mongodb.com>
  */
-class ToolNormalizer extends ModelContractNormalizer
+class ToolNormalizer extends ModelContractNormalizer implements NormalizerAwareInterface
 {
+    use NormalizerAwareTrait;
+
     /**
      * @param Tool $data
      *
@@ -31,7 +32,7 @@ class ToolNormalizer extends ModelContractNormalizer
      *     type: 'function',
      *     name: string,
      *     description: string,
-     *     parameters?: JsonSchema
+     *     parameters?: array<string, mixed>
      * }
      */
     public function normalize(mixed $data, ?string $format = null, array $context = []): array
@@ -43,7 +44,7 @@ class ToolNormalizer extends ModelContractNormalizer
         ];
 
         if (null !== $data->getParameters()) {
-            $function['parameters'] = $data->getParameters();
+            $function['parameters'] = $this->normalizer->normalize($data->getParameters(), $format, $context);
         }
 
         return $function;

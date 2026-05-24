@@ -11,7 +11,7 @@
 
 namespace Symfony\AI\Platform\Contract\JsonSchema\Describer;
 
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
 use Symfony\AI\Platform\Exception\InvalidArgumentException;
@@ -26,9 +26,6 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 use Symfony\Component\TypeInfo\TypeResolver\TypeResolver;
 use Symfony\Component\TypeInfo\TypeResolver\TypeResolverInterface;
 
-/**
- * @phpstan-import-type JsonSchema from Factory
- */
 final class TypeInfoDescriber implements ObjectDescriberInterface, PropertyDescriberInterface, ObjectDescriberAwareInterface
 {
     private ObjectDescriberInterface $objectDescriber;
@@ -44,26 +41,16 @@ final class TypeInfoDescriber implements ObjectDescriberInterface, PropertyDescr
         $this->objectDescriber = $describer;
     }
 
-    /**
-     * @param array<string, mixed> $schema
-     *
-     * @param-out array<string, mixed> $schema
-     */
-    public function describeObject(ObjectSubject $subject, ?array &$schema): iterable
+    public function describeObject(ObjectSubject $subject, Schema $schema): iterable
     {
-        if (!isset($schema['anyOf']) && !isset($schema['oneOf']) && !isset($schema['allOf'])) {
-            $schema['type'] ??= 'object';
+        if (null === $schema->anyOf && null === $schema->oneOf && null === $schema->allOf) {
+            $schema->type ??= 'object';
         }
 
         return [];
     }
 
-    /**
-     * @param array<string, mixed> $schema
-     *
-     * @param-out array<string, mixed> $schema
-     */
-    public function describeProperty(PropertySubject $subject, ?array &$schema): void
+    public function describeProperty(PropertySubject $subject, Schema $schema): void
     {
         $reflector = $subject->getReflector();
         if (!$reflector->getDeclaringClass()->isUserDefined()) {
@@ -73,21 +60,20 @@ final class TypeInfoDescriber implements ObjectDescriberInterface, PropertyDescr
 
         $subSchema = $this->getTypeSchema($type);
         if ($type->isNullable()) {
-            if (!isset($subSchema['anyOf'])) {
-                $subSchema['type'] = (array) $subSchema['type'];
-                $subSchema['type'][] = 'null';
+            if (null === $subSchema->anyOf) {
+                $subSchema->type = (array) $subSchema->type;
+                $subSchema->type[] = 'null';
             }
         }
 
-        /** @var array<string, mixed> $merged */
-        $merged = array_replace_recursive($schema ?? [], $subSchema);
-        $schema = $merged;
+        foreach ((array) $subSchema as $key => $value) {
+            if (null !== $value) {
+                $schema->{$key} = $value;
+            }
+        }
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function getTypeSchema(Type $type): array
+    private function getTypeSchema(Type $type): Schema
     {
         // Handle BackedEnumType directly
         if ($type instanceof BackedEnumType) {
@@ -114,25 +100,25 @@ final class TypeInfoDescriber implements ObjectDescriberInterface, PropertyDescr
                 $variants[] = $this->getTypeSchema($variant);
             }
 
-            return ['anyOf' => $variants];
+            return new Schema(anyOf: $variants);
         }
 
         switch (true) {
             case $type->isIdentifiedBy(TypeIdentifier::INT):
-                return ['type' => 'integer'];
+                return new Schema(type: 'integer');
 
             case $type->isIdentifiedBy(TypeIdentifier::FLOAT):
-                return ['type' => 'number'];
+                return new Schema(type: 'number');
 
             case $type->isIdentifiedBy(TypeIdentifier::BOOL):
-                return ['type' => 'boolean'];
+                return new Schema(type: 'boolean');
 
             case $type->isIdentifiedBy(TypeIdentifier::ARRAY):
                 \assert($type instanceof CollectionType);
 
                 $items = $this->getTypeSchema($type->getCollectionValueType());
 
-                return ['type' => 'array'] + ($items ? ['items' => $items] : []);
+                return new Schema(type: 'array', items: $items->isEmpty() ? null : $items);
 
             case $type->isIdentifiedBy(TypeIdentifier::OBJECT):
                 if ($type instanceof BuiltinType) {
@@ -140,25 +126,28 @@ final class TypeInfoDescriber implements ObjectDescriberInterface, PropertyDescr
                 }
                 \assert($type instanceof ObjectType);
 
-                $schema = null;
+                $subSchema = new Schema();
                 // Recursively build the schema for an object type
-                $this->objectDescriber->describeObject(new ObjectSubject($type->getClassName(), new \ReflectionClass($type->getClassName())), $schema);
+                $this->objectDescriber->describeObject(new ObjectSubject($type->getClassName(), new \ReflectionClass($type->getClassName())), $subSchema);
 
-                return $schema ?? ['type' => 'object'];
+                if ($subSchema->isEmpty()) {
+                    $subSchema->type = 'object';
+                }
+
+                return $subSchema;
 
             case $type->isIdentifiedBy(TypeIdentifier::NULL):
-                return ['type' => 'null'];
+                return new Schema(type: 'null');
+
             case $type->isIdentifiedBy(TypeIdentifier::STRING):
-                return ['type' => 'string'];
+                return new Schema(type: 'string');
+
             default:
-                return [];
+                return new Schema();
         }
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function buildEnumSchema(string $enumClassName): array
+    private function buildEnumSchema(string $enumClassName): Schema
     {
         $reflection = new \ReflectionEnum($enumClassName);
 
@@ -181,9 +170,6 @@ final class TypeInfoDescriber implements ObjectDescriberInterface, PropertyDescr
         $typeName = $backingType->getName();
         $jsonType = 'string' === $typeName ? 'string' : ('int' === $typeName ? 'integer' : 'string');
 
-        return [
-            'type' => $jsonType,
-            'enum' => $values,
-        ];
+        return new Schema(type: $jsonType, enum: $values);
     }
 }

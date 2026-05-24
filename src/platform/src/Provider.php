@@ -11,6 +11,7 @@
 
 namespace Symfony\AI\Platform;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Event\InvocationEvent;
 use Symfony\AI\Platform\Event\ResultEvent;
 use Symfony\AI\Platform\Exception\ModelNotFoundException;
@@ -88,6 +89,10 @@ final class Provider implements ProviderInterface
 
         if (isset($options['tools'])) {
             $options['tools'] = $this->contract->createToolOption($options['tools'], $model);
+        }
+
+        if (($options['response_format']['json_schema']['schema'] ?? null) instanceof Schema) {
+            $options['response_format']['json_schema']['schema'] = $this->contract->createSchemaOption($options['response_format']['json_schema']['schema']);
         }
 
         $result = $this->convertResult($model, $this->doInvoke($model, $payload, $options), $options);

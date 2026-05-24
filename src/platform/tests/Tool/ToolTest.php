@@ -12,6 +12,7 @@
 namespace Symfony\AI\Platform\Tests\Tool;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Tool\ExecutionReference;
 use Symfony\AI\Platform\Tool\Tool;
 
@@ -44,17 +45,14 @@ final class ToolTest extends TestCase
     public function testReturnsParametersWhenProvided()
     {
         $reference = new ExecutionReference('MyClass');
-        $parameters = [
-            'type' => 'object',
-            'properties' => [
-                'param1' => [
-                    'type' => 'string',
-                    'description' => 'A parameter',
-                ],
+        $parameters = new Schema(
+            type: 'object',
+            properties: [
+                'param1' => new Schema(type: 'string', description: 'A parameter'),
             ],
-            'required' => [],
-            'additionalProperties' => false,
-        ];
+            required: [],
+            additionalProperties: false,
+        );
         $tool = new Tool($reference, 'tool_name', 'tool description', $parameters);
 
         $this->assertSame($parameters, $tool->getParameters());

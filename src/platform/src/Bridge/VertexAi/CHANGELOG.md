@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.10
+----
+
+ * Add `SchemaNormalizer` for platform-specific schema normalization
+
 0.9
 ---
 

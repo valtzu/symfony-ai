@@ -17,19 +17,29 @@ use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolException;
 use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolNoParams;
 use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolOptionalParam;
 use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolRequiredParams;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
+use Symfony\AI\Platform\Contract\Normalizer\SchemaNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\ToolNormalizer;
 use Symfony\AI\Platform\Tool\ExecutionReference;
 use Symfony\AI\Platform\Tool\Tool;
+use Symfony\Component\Serializer\Serializer;
 
 class ToolNormalizerTest extends TestCase
 {
+    private Serializer $serializer;
+
+    protected function setUp(): void
+    {
+        $this->serializer = new Serializer([new ToolNormalizer(), new SchemaNormalizer()]);
+    }
+
     /**
      * @param array<string, mixed> $expected
      */
     #[DataProvider('provideTools')]
     public function testNormalize(Tool $tool, array $expected)
     {
-        $this->assertSame($expected, (new ToolNormalizer())->normalize($tool));
+        $this->assertSame($expected, $this->serializer->normalize($tool));
     }
 
     public static function provideTools(): \Generator
@@ -39,21 +49,15 @@ class ToolNormalizerTest extends TestCase
                 new ExecutionReference(ToolRequiredParams::class, 'bar'),
                 'tool_required_params',
                 'A tool with required parameters',
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'text' => [
-                            'type' => 'string',
-                            'description' => 'The text given to the tool',
-                        ],
-                        'number' => [
-                            'type' => 'integer',
-                            'description' => 'A number given to the tool',
-                        ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                        'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                     ],
-                    'required' => ['text', 'number'],
-                    'additionalProperties' => false,
-                ],
+                    required: ['text', 'number'],
+                    additionalProperties: false,
+                ),
             ),
             [
                 'type' => 'function',
@@ -84,21 +88,15 @@ class ToolNormalizerTest extends TestCase
                 new ExecutionReference(ToolOptionalParam::class, 'bar'),
                 'tool_optional_param',
                 'A tool with one optional parameter',
-                [
-                    'type' => 'object',
-                    'properties' => [
-                        'text' => [
-                            'type' => 'string',
-                            'description' => 'The text given to the tool',
-                        ],
-                        'number' => [
-                            'type' => 'integer',
-                            'description' => 'A number given to the tool',
-                        ],
+                new Schema(
+                    type: 'object',
+                    properties: [
+                        'text' => new Schema(type: 'string', description: 'The text given to the tool'),
+                        'number' => new Schema(type: 'integer', description: 'A number given to the tool'),
                     ],
-                    'required' => ['text'],
-                    'additionalProperties' => false,
-                ],
+                    required: ['text'],
+                    additionalProperties: false,
+                ),
             ),
             [
                 'type' => 'function',

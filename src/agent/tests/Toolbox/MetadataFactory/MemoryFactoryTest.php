@@ -16,6 +16,7 @@ use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolNoAttribute1;
 use Symfony\AI\Agent\Tests\Fixtures\Tool\ToolNoAttribute2;
 use Symfony\AI\Agent\Toolbox\Exception\ToolException;
 use Symfony\AI\Agent\Toolbox\ToolFactory\MemoryToolFactory;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Tool\Tool;
 
 final class MemoryFactoryTest extends TestCase
@@ -43,17 +44,17 @@ final class MemoryFactoryTest extends TestCase
         $this->assertSame('Generates birthday message', $metadata[0]->getDescription());
         $this->assertSame('__invoke', $metadata[0]->getReference()->getMethod());
 
-        $expectedParams = [
-            'type' => 'object',
-            'properties' => [
-                'name' => ['type' => 'string', 'description' => 'the name of the person'],
-                'years' => ['type' => 'integer', 'description' => 'the age of the person'],
+        $expectedParams = new Schema(
+            type: 'object',
+            properties: [
+                'name' => new Schema(type: 'string', description: 'the name of the person'),
+                'years' => new Schema(type: 'integer', description: 'the age of the person'),
             ],
-            'required' => ['name', 'years'],
-            'additionalProperties' => false,
-        ];
+            required: ['name', 'years'],
+            additionalProperties: false,
+        );
 
-        $this->assertSame($expectedParams, $metadata[0]->getParameters());
+        $this->assertEquals($expectedParams, $metadata[0]->getParameters());
     }
 
     public function testGetMetadataWithMultipleToolsInClass()
@@ -70,30 +71,30 @@ final class MemoryFactoryTest extends TestCase
         $this->assertSame('Buys a number of items per product', $metadata[0]->getDescription());
         $this->assertSame('buy', $metadata[0]->getReference()->getMethod());
 
-        $expectedParams = [
-            'type' => 'object',
-            'properties' => [
-                'id' => ['type' => 'integer', 'description' => 'the ID of the product'],
-                'amount' => ['type' => 'integer', 'description' => 'the number of products'],
+        $expectedParams = new Schema(
+            type: 'object',
+            properties: [
+                'id' => new Schema(type: 'integer', description: 'the ID of the product'),
+                'amount' => new Schema(type: 'integer', description: 'the number of products'),
             ],
-            'required' => ['id', 'amount'],
-            'additionalProperties' => false,
-        ];
-        $this->assertSame($expectedParams, $metadata[0]->getParameters());
+            required: ['id', 'amount'],
+            additionalProperties: false,
+        );
+        $this->assertEquals($expectedParams, $metadata[0]->getParameters());
 
         $this->assertInstanceOf(Tool::class, $metadata[1]);
         $this->assertSame('cancel', $metadata[1]->getName());
         $this->assertSame('Cancels an order', $metadata[1]->getDescription());
         $this->assertSame('cancel', $metadata[1]->getReference()->getMethod());
 
-        $expectedParams = [
-            'type' => 'object',
-            'properties' => [
-                'orderId' => ['type' => 'string', 'description' => 'the ID of the order'],
+        $expectedParams = new Schema(
+            type: 'object',
+            properties: [
+                'orderId' => new Schema(type: 'string', description: 'the ID of the order'),
             ],
-            'required' => ['orderId'],
-            'additionalProperties' => false,
-        ];
-        $this->assertSame($expectedParams, $metadata[1]->getParameters());
+            required: ['orderId'],
+            additionalProperties: false,
+        );
+        $this->assertEquals($expectedParams, $metadata[1]->getParameters());
     }
 }

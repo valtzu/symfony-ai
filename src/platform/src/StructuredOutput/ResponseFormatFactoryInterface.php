@@ -11,6 +11,8 @@
 
 namespace Symfony\AI\Platform\StructuredOutput;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
+
 /**
  * @author Oskar Stark <oskarstark@googlemail.com>
  */
@@ -23,7 +25,7 @@ interface ResponseFormatFactoryInterface
      *     type: 'json_schema',
      *     json_schema: array{
      *         name: string,
-     *         schema: array<string, mixed>,
+     *         schema: Schema|null,
      *         strict: true,
      *     }
      * }

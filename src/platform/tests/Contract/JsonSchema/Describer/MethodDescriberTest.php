@@ -13,6 +13,7 @@ namespace Symfony\AI\Platform\Tests\Contract\JsonSchema\Describer;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\MethodDescriber;
 use Symfony\AI\Platform\Contract\JsonSchema\Factory;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
@@ -20,39 +21,29 @@ use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
 use Symfony\AI\Platform\Tests\Fixtures\StructuredOutput\User;
 use Symfony\AI\Platform\Tests\Fixtures\StructuredOutput\UserWithConstructor;
 
-/**
- * @phpstan-import-type JsonSchema from Factory
- */
 final class MethodDescriberTest extends TestCase
 {
-    /**
-     * @param JsonSchema|array<string, mixed> $actual
-     * @param JsonSchema|array<string, mixed> $expected
-     */
     #[DataProvider('propertyProvider')]
-    public function testDescribeProperty(PropertySubject $property, array $actual, array $expected)
+    public function testDescribeProperty(PropertySubject $property, Schema $actual, Schema $expected)
     {
         $describer = new MethodDescriber();
         $describer->describeProperty($property, $actual);
 
-        $this->assertSame($expected, $actual);
+        $this->assertEquals($expected, $actual);
     }
 
     public static function propertyProvider(): iterable
     {
         yield 'property' => [
             new PropertySubject('name', new \ReflectionProperty(User::class, 'name')),
-            ['type' => 'string'],
-            ['type' => 'string'],
+            new Schema(type: 'string'),
+            new Schema(type: 'string'),
         ];
 
         yield 'constructor promoted property' => [
             new PropertySubject('name', new \ReflectionParameter([UserWithConstructor::class, '__construct'], 'name')),
-            ['type' => 'string'],
-            [
-                'type' => 'string',
-                'description' => 'The name of the user in lowercase',
-            ],
+            new Schema(type: 'string'),
+            new Schema(type: 'string', description: 'The name of the user in lowercase'),
         ];
     }
 
@@ -63,7 +54,7 @@ final class MethodDescriberTest extends TestCase
     public function testDescribeModel(ObjectSubject $model, array $expectedPropertyNames)
     {
         $describer = new MethodDescriber();
-        $actualProperties = $describer->describeObject($model, $actual);
+        $actualProperties = $describer->describeObject($model, new Schema());
 
         $this->assertSame($expectedPropertyNames, array_map(static fn (PropertySubject $property) => $property->getName(), iterator_to_array($actualProperties)));
     }

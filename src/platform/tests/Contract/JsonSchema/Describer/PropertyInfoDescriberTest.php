@@ -13,6 +13,7 @@ namespace Symfony\AI\Platform\Tests\Contract\JsonSchema\Describer;
 
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Describer\PropertyInfoDescriber;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
@@ -25,7 +26,7 @@ final class PropertyInfoDescriberTest extends TestCase
     public function testDescribeDiscriminatorMapObject()
     {
         $describer = new PropertyInfoDescriber();
-        $schema = null;
+        $schema = new Schema();
 
         /** @var list<PropertySubject> $actualProperties */
         $actualProperties = iterator_to_array($describer->describeObject(new ObjectSubject(ListItemName::class, new \ReflectionClass(ListItemName::class)), $schema));
@@ -38,17 +39,14 @@ final class PropertyInfoDescriberTest extends TestCase
         $this->assertInstanceOf(\ReflectionParameter::class, $actualProperties[3]->getReflector());
     }
 
-    /**
-     * @param array<string, mixed>|null $expectedSchema
-     */
-    #[TestWith([null, new PropertySubject('name', new \ReflectionParameter([UserWithConstructor::class, '__construct'], 'name'))], 'constructor parameter')]
-    #[TestWith([['description' => 'The name of the user in lowercase'], new PropertySubject('name', new \ReflectionProperty(User::class, 'name'))])]
-    public function testDescribeDescription(?array $expectedSchema, PropertySubject $property)
+    #[TestWith([new Schema(), new PropertySubject('name', new \ReflectionParameter([UserWithConstructor::class, '__construct'], 'name'))], 'constructor parameter')]
+    #[TestWith([new Schema(description: 'The name of the user in lowercase'), new PropertySubject('name', new \ReflectionProperty(User::class, 'name'))])]
+    public function testDescribeDescription(Schema $expectedSchema, PropertySubject $property)
     {
         $describer = new PropertyInfoDescriber();
-        $schema = null;
+        $schema = new Schema();
 
         $describer->describeProperty($property, $schema);
-        $this->assertSame($expectedSchema, $schema);
+        $this->assertEquals($expectedSchema, $schema);
     }
 }

@@ -12,29 +12,32 @@
 namespace Symfony\AI\Platform\Contract\JsonSchema\Describer;
 
 use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
 use Symfony\AI\Platform\Exception\IOException;
 
-/**
- * @phpstan-import-type JsonSchema from Factory
- */
 final class SchemaAttributeDescriber implements PropertyDescriberInterface
 {
-    public function describeProperty(PropertySubject $subject, ?array &$schema): void
+    public function describeProperty(PropertySubject $subject, Schema $schema): void
     {
         foreach ($subject->getAttributes(Schema::class) as $attribute) {
             if ($attribute->ref) {
                 try {
-                    $attributeSchema = json_decode(file_get_contents($attribute->ref), true, flags: \JSON_THROW_ON_ERROR);
+                    $data = json_decode((string) file_get_contents($attribute->ref), true, flags: \JSON_THROW_ON_ERROR);
                 } catch (\JsonException $e) {
                     throw new IOException(\sprintf('Failed to load the schema from "%s"', $attribute->ref), 0, $e);
                 }
+                foreach ($data as $key => $value) {
+                    if (property_exists($schema, $key)) {
+                        $schema->{$key} = $value;
+                    }
+                }
             } else {
-                $attributeSchema = array_filter((array) $attribute, static fn ($value) => null !== $value);
+                foreach ((array) $attribute as $key => $value) {
+                    if (null !== $value) {
+                        $schema->{$key} = $value;
+                    }
+                }
             }
-
-            $schema = array_replace_recursive($schema ?? [], $attributeSchema);
         }
     }
 }

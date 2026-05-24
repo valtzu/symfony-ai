@@ -20,43 +20,62 @@ use Symfony\AI\Platform\Exception\InvalidArgumentException;
 final class Schema
 {
     /**
+     * @param string|list<string>|null         $type
+     * @param array<string, self>|null         $properties
+     * @param list<self>|null                  $anyOf
+     * @param list<self>|null                  $oneOf
+     * @param list<self>|null                  $allOf
+     * @param list<string>|null                $required
      * @param list<int|float|string|null>|null $enum
-     * @param string|int|string[]|null         $const
-     * @param string|null                      $ref   A path to external schema file. This is mutually exclusive with all the other arguments.
+     * @param string|null                      $ref        A path to external schema file. This is mutually exclusive with all the other arguments.
      */
     public function __construct(
+        // structural
+        public string|array|null $type = null,
+        public ?string $format = null,
+        public ?array $properties = null,
+        public ?self $items = null,
+        public ?array $anyOf = null,
+        public ?array $oneOf = null,
+        public ?array $allOf = null,
+        public ?self $not = null,
+        public ?array $required = null,
+        public bool|self|null $additionalProperties = null,
+        public ?bool $nullable = null,
+        public ?string $contentMediaType = null,
+
         // can be used by many types
-        public readonly ?string $description = null,
-        public readonly mixed $example = null,
-        public readonly ?array $enum = null,
-        public readonly string|int|array|null $const = null,
+        public ?string $description = null,
+        public mixed $example = null,
+        public ?array $enum = null,
+        public mixed $const = null,
 
         // string
-        public readonly ?string $pattern = null,
-        public readonly ?int $minLength = null,
-        public readonly ?int $maxLength = null,
+        public ?string $pattern = null,
+        public ?int $minLength = null,
+        public ?int $maxLength = null,
 
         // number
-        public readonly int|float|null $minimum = null,
-        public readonly int|float|null $maximum = null,
-        public readonly int|float|null $multipleOf = null,
-        public readonly int|float|null $exclusiveMinimum = null,
-        public readonly int|float|null $exclusiveMaximum = null,
+        public int|float|null $minimum = null,
+        public int|float|null $maximum = null,
+        public int|float|null $multipleOf = null,
+        public int|float|bool|null $exclusiveMinimum = null,
+        public int|float|bool|null $exclusiveMaximum = null,
 
         // array
-        public readonly ?int $minItems = null,
-        public readonly ?int $maxItems = null,
-        public readonly ?bool $uniqueItems = null,
-        public readonly ?int $minContains = null,
-        public readonly ?int $maxContains = null,
+        public ?int $minItems = null,
+        public ?int $maxItems = null,
+        public ?bool $uniqueItems = null,
+        public ?int $minContains = null,
+        public ?int $maxContains = null,
 
         // object
-        public readonly ?int $minProperties = null,
-        public readonly ?int $maxProperties = null,
-        public readonly ?bool $dependentRequired = null,
+        public ?int $minProperties = null,
+        public ?int $maxProperties = null,
+        public ?bool $dependentRequired = null,
 
         // a reference to a schema file
-        public readonly ?string $ref = null,
+        public ?string $ref = null,
     ) {
         if ($this->ref) {
             if (\count(array_filter((array) $this, static fn (mixed $value) => null !== $value)) > 1) {
@@ -121,7 +140,7 @@ final class Schema
             throw new InvalidArgumentException('MultipleOf must be greater than or equal to 0.');
         }
 
-        if (null !== $exclusiveMinimum && null !== $exclusiveMaximum && $exclusiveMaximum < $exclusiveMinimum) {
+        if (null !== $exclusiveMinimum && null !== $exclusiveMaximum && \is_numeric($exclusiveMinimum) && \is_numeric($exclusiveMaximum) && $exclusiveMaximum < $exclusiveMinimum) {
             throw new InvalidArgumentException('ExclusiveMaximum must be greater than or equal to exclusiveMinimum.');
         }
 
@@ -184,5 +203,10 @@ final class Schema
                 throw new InvalidArgumentException('MaxProperties must be greater than or equal to 0.');
             }
         }
+    }
+
+    public function isEmpty(): bool
+    {
+        return array_all((array) $this, static fn ($value) => null === $value);
     }
 }

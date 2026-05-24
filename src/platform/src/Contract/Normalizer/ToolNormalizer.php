@@ -11,17 +11,18 @@
 
 namespace Symfony\AI\Platform\Contract\Normalizer;
 
-use Symfony\AI\Platform\Contract\JsonSchema\Factory;
 use Symfony\AI\Platform\Tool\Tool;
+use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
- * @phpstan-import-type JsonSchema from Factory
- *
  * @author Christopher Hertel <mail@christopher-hertel.de>
  */
-class ToolNormalizer implements NormalizerInterface
+class ToolNormalizer implements NormalizerInterface, NormalizerAwareInterface
 {
+    use NormalizerAwareTrait;
+
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Tool;
@@ -42,7 +43,7 @@ class ToolNormalizer implements NormalizerInterface
      *     function: array{
      *         name: string,
      *         description: string,
-     *         parameters?: JsonSchema
+     *         parameters?: array<string, mixed>
      *     }
      * }
      */
@@ -54,7 +55,7 @@ class ToolNormalizer implements NormalizerInterface
         ];
 
         if (null !== $data->getParameters()) {
-            $function['parameters'] = $data->getParameters();
+            $function['parameters'] = $this->normalizer->normalize($data->getParameters(), $format, $context);
         }
 
         return [

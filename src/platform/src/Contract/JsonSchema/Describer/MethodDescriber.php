@@ -11,12 +11,13 @@
 
 namespace Symfony\AI\Platform\Contract\JsonSchema\Describer;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\ObjectSubject;
 use Symfony\AI\Platform\Contract\JsonSchema\Subject\PropertySubject;
 
 final class MethodDescriber implements ObjectDescriberInterface, PropertyDescriberInterface
 {
-    public function describeObject(ObjectSubject $subject, ?array &$schema): iterable
+    public function describeObject(ObjectSubject $subject, Schema $schema): iterable
     {
         $reflection = $subject->getReflector();
 
@@ -29,7 +30,7 @@ final class MethodDescriber implements ObjectDescriberInterface, PropertyDescrib
         }
     }
 
-    public function describeProperty(PropertySubject $subject, ?array &$schema): void
+    public function describeProperty(PropertySubject $subject, Schema $schema): void
     {
         $reflector = $subject->getReflector();
         if (!$reflector instanceof \ReflectionParameter) {
@@ -40,7 +41,7 @@ final class MethodDescriber implements ObjectDescriberInterface, PropertyDescrib
             return;
         }
 
-        $schema['description'] = $description;
+        $schema->description = $description;
     }
 
     private function fromParameter(\ReflectionParameter $parameter): string

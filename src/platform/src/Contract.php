@@ -11,6 +11,7 @@
 
 namespace Symfony\AI\Platform;
 
+use Symfony\AI\Platform\Contract\JsonSchema\Attribute\Schema;
 use Symfony\AI\Platform\Contract\Normalizer\Message\AssistantMessageNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\Message\Content\AudioNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\Message\Content\ImageNormalizer;
@@ -21,6 +22,7 @@ use Symfony\AI\Platform\Contract\Normalizer\Message\SystemMessageNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\Message\ToolCallMessageNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\Message\UserMessageNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\Result\ToolCallNormalizer;
+use Symfony\AI\Platform\Contract\Normalizer\SchemaNormalizer;
 use Symfony\AI\Platform\Contract\Normalizer\ToolNormalizer;
 use Symfony\AI\Platform\Tool\Tool;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
@@ -61,6 +63,7 @@ class Contract
 
         // Options
         $normalizers[] = new ToolNormalizer();
+        $normalizers[] = new SchemaNormalizer();
 
         // Result
         $normalizers[] = new ToolCallNormalizer();
@@ -98,5 +101,13 @@ class Contract
             self::CONTEXT_MODEL => $model,
             AbstractObjectNormalizer::PRESERVE_EMPTY_OBJECTS => true,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    final public function createSchemaOption(Schema $schema): array
+    {
+        return $this->normalizer->normalize($schema);
     }
 }
